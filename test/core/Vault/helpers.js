@@ -1,6 +1,6 @@
-const { expandDecimals } = require("../../shared/utilities")
-const { toUsd } = require("../../shared/units")
-const { deployContract } = require("../../shared/fixtures")
+const { expandDecimals } = require("../../shared/utilities");
+const { toUsd } = require("../../shared/units");
+const { deployContract } = require("../../shared/fixtures");
 
 const errors = [
   "Vault: zero error",
@@ -58,20 +58,20 @@ const errors = [
   "Vault: reserve exceeds pool",
   "Vault: forbidden",
   "Vault: forbidden",
-  "Vault: maxGasPrice exceeded"
-]
+  "Vault: maxGasPrice exceeded",
+];
 
 async function initVaultErrors(vault) {
-  const vaultErrorController = await deployContract("VaultErrorController", [])
-  await vault.setErrorController(vaultErrorController.address)
+  const vaultErrorController = await deployContract("VaultErrorController", []);
+  await vault.setErrorController(vaultErrorController.address);
   await vaultErrorController.setErrors(vault.address, errors);
-  return vaultErrorController
+  return vaultErrorController;
 }
 
 async function initVaultUtils(vault) {
-  const vaultUtils = await deployContract("VaultUtils", [vault.address])
-  await vault.setVaultUtils(vaultUtils.address)
-  return vaultUtils
+  const vaultUtils = await deployContract("VaultUtils", [vault.address]);
+  await vault.setVaultUtils(vaultUtils.address);
+  return vaultUtils;
 }
 
 async function initVault(vault, router, usdg, priceFeed) {
@@ -82,22 +82,24 @@ async function initVault(vault, router, usdg, priceFeed) {
     toUsd(5), // liquidationFeeUsd
     600, // fundingRateFactor
     600 // stableFundingRateFactor
-  )
+  );
 
-  const vaultUtils = await initVaultUtils(vault)
-  const vaultErrorController = await initVaultErrors(vault)
+  const vaultUtils = await initVaultUtils(vault);
+  const vaultErrorController = await initVaultErrors(vault);
 
-  return { vault, vaultUtils, vaultErrorController }
+  return { vault, vaultUtils, vaultErrorController };
 }
 
 async function validateVaultBalance(expect, vault, token, offset) {
-  if (!offset) { offset = 0 }
-  const poolAmount = await vault.poolAmounts(token.address)
-  const feeReserve = await vault.feeReserves(token.address)
-  const balance = await token.balanceOf(vault.address)
-  let amount = poolAmount.add(feeReserve)
-  expect(balance).gt(0)
-  expect(poolAmount.add(feeReserve).add(offset)).eq(balance)
+  if (!offset) {
+    offset = 0;
+  }
+  const poolAmount = await vault.poolAmounts(token.address);
+  const feeReserve = await vault.feeReserves(token.address);
+  const balance = await token.balanceOf(vault.address);
+  let amount = poolAmount.add(feeReserve);
+  expect(balance).gt(0);
+  expect(poolAmount.add(feeReserve).add(offset)).eq(balance);
 }
 
 function getBnbConfig(bnb, bnbPriceFeed) {
@@ -108,8 +110,8 @@ function getBnbConfig(bnb, bnbPriceFeed) {
     75, // _minProfitBps,
     0, // _maxUsdgAmount
     false, // _isStable
-    true // _isShortable
-  ]
+    true, // _isShortable
+  ];
 }
 
 function getEthConfig(eth, ethPriceFeed) {
@@ -120,8 +122,8 @@ function getEthConfig(eth, ethPriceFeed) {
     75, // _minProfitBps
     0, // _maxUsdgAmount
     false, // _isStable
-    true // _isShortable
-  ]
+    true, // _isShortable
+  ];
 }
 
 function getBtcConfig(btc, btcPriceFeed) {
@@ -132,8 +134,8 @@ function getBtcConfig(btc, btcPriceFeed) {
     75, // _minProfitBps
     0, // _maxUsdgAmount
     false, // _isStable
-    true // _isShortable
-  ]
+    true, // _isShortable
+  ];
 }
 
 function getDaiConfig(dai, daiPriceFeed) {
@@ -144,8 +146,8 @@ function getDaiConfig(dai, daiPriceFeed) {
     75, // _minProfitBps
     0, // _maxUsdgAmount
     true, // _isStable
-    false // _isShortable
-  ]
+    false, // _isShortable
+  ];
 }
 
 module.exports = {
@@ -155,5 +157,5 @@ module.exports = {
   getBnbConfig,
   getBtcConfig,
   getEthConfig,
-  getDaiConfig
-}
+  getDaiConfig,
+};

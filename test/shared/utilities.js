@@ -1,119 +1,123 @@
-const BN = require('bn.js')
+const BN = require("bn.js");
 
-const maxUint256 = ethers.constants.MaxUint256
+const maxUint256 = ethers.constants.MaxUint256;
 
 function newWallet() {
-  return ethers.Wallet.createRandom()
+  return ethers.Wallet.createRandom();
 }
 
 function bigNumberify(n) {
-  return ethers.BigNumber.from(n)
+  return ethers.BigNumber.from(n);
 }
 
 function expandDecimals(n, decimals) {
-  return bigNumberify(n).mul(bigNumberify(10).pow(decimals))
+  return bigNumberify(n).mul(bigNumberify(10).pow(decimals));
 }
 
 async function send(provider, method, params = []) {
-  await provider.send(method, params)
+  await provider.send(method, params);
 }
 
 async function mineBlock(provider) {
-  await send(provider, "evm_mine")
+  await send(provider, "evm_mine");
 }
 
 async function increaseTime(provider, seconds) {
-  await send(provider, "evm_increaseTime", [seconds])
+  await send(provider, "evm_increaseTime", [seconds]);
 }
 
 async function gasUsed(provider, tx) {
-  return (await provider.getTransactionReceipt(tx.hash)).gasUsed
+  return (await provider.getTransactionReceipt(tx.hash)).gasUsed;
 }
 
 async function getNetworkFee(provider, tx) {
-  const gas = await gasUsed(provider, tx)
-  return gas.mul(tx.gasPrice)
+  const gas = await gasUsed(provider, tx);
+  return gas.mul(tx.gasPrice);
 }
 
 async function reportGasUsed(provider, tx, label) {
-  const { gasUsed } = await provider.getTransactionReceipt(tx.hash)
-  console.info(label, gasUsed.toString())
-  return gasUsed
+  const { gasUsed } = await provider.getTransactionReceipt(tx.hash);
+  console.info(label, gasUsed.toString());
+  return gasUsed;
 }
 
 async function getBlockTime(provider) {
-  const blockNumber = await provider.getBlockNumber()
-  const block = await provider.getBlock(blockNumber)
-  return block.timestamp
+  const blockNumber = await provider.getBlockNumber();
+  const block = await provider.getBlock(blockNumber);
+  return block.timestamp;
 }
 
 async function getTxnBalances(provider, user, txn, callback) {
-    const balance0 = await provider.getBalance(user.address)
-    const tx = await txn()
-    const fee = await getNetworkFee(provider, tx)
-    const balance1 = await provider.getBalance(user.address)
-    callback(balance0, balance1, fee)
+  const balance0 = await provider.getBalance(user.address);
+  const tx = await txn();
+  const fee = await getNetworkFee(provider, tx);
+  const balance1 = await provider.getBalance(user.address);
+  callback(balance0, balance1, fee);
 }
 
 function print(label, value, decimals) {
   if (decimals === 0) {
-    console.log(label, value.toString())
-    return
+    console.log(label, value.toString());
+    return;
   }
-  const valueStr = ethers.utils.formatUnits(value, decimals)
-  console.log(label, valueStr)
+  const valueStr = ethers.utils.formatUnits(value, decimals);
+  console.log(label, valueStr);
 }
 
 function getPriceBitArray(prices) {
-  let priceBitArray = []
-  let shouldExit = false
+  let priceBitArray = [];
+  let shouldExit = false;
 
   for (let i = 0; i < parseInt((prices.length - 1) / 8) + 1; i++) {
-    let priceBits = new BN('0')
+    let priceBits = new BN("0");
     for (let j = 0; j < 8; j++) {
-      let index = i * 8 + j
+      let index = i * 8 + j;
       if (index >= prices.length) {
-        shouldExit = true
-        break
+        shouldExit = true;
+        break;
       }
 
-      const price = new BN(prices[index])
-      if (price.gt(new BN("2147483648"))) { // 2^31
-        throw new Error(`price exceeds bit limit ${price.toString()}`)
+      const price = new BN(prices[index]);
+      if (price.gt(new BN("2147483648"))) {
+        // 2^31
+        throw new Error(`price exceeds bit limit ${price.toString()}`);
       }
-      priceBits = priceBits.or(price.shln(j * 32))
+      priceBits = priceBits.or(price.shln(j * 32));
     }
 
-    priceBitArray.push(priceBits.toString())
+    priceBitArray.push(priceBits.toString());
 
-    if (shouldExit) { break }
+    if (shouldExit) {
+      break;
+    }
   }
 
-  return priceBitArray
+  return priceBitArray;
 }
 
 function getPriceBits(prices) {
   if (prices.length > 8) {
-    throw new Error("max prices.length exceeded")
+    throw new Error("max prices.length exceeded");
   }
 
-  let priceBits = new BN('0')
+  let priceBits = new BN("0");
 
   for (let j = 0; j < 8; j++) {
-    let index = j
+    let index = j;
     if (index >= prices.length) {
-      break
+      break;
     }
 
-    const price = new BN(prices[index])
-    if (price.gt(new BN("2147483648"))) { // 2^31
-      throw new Error(`price exceeds bit limit ${price.toString()}`)
+    const price = new BN(prices[index]);
+    if (price.gt(new BN("2147483648"))) {
+      // 2^31
+      throw new Error(`price exceeds bit limit ${price.toString()}`);
     }
 
-    priceBits = priceBits.or(price.shln(j * 32))
+    priceBits = priceBits.or(price.shln(j * 32));
   }
 
-  return priceBits.toString()
+  return priceBits.toString();
 }
 
 const limitDecimals = (amount, maxDecimals) => {
@@ -128,11 +132,14 @@ const limitDecimals = (amount, maxDecimals) => {
   if (dotIndex !== -1) {
     let decimals = amountStr.length - dotIndex - 1;
     if (decimals > maxDecimals) {
-      amountStr = amountStr.substr(0, amountStr.length - (decimals - maxDecimals));
+      amountStr = amountStr.substr(
+        0,
+        amountStr.length - (decimals - maxDecimals)
+      );
     }
   }
   return amountStr;
-}
+};
 
 const padDecimals = (amount, minDecimals) => {
   let amountStr = amount.toString();
@@ -140,13 +147,16 @@ const padDecimals = (amount, minDecimals) => {
   if (dotIndex !== -1) {
     const decimals = amountStr.length - dotIndex - 1;
     if (decimals < minDecimals) {
-      amountStr = amountStr.padEnd(amountStr.length + (minDecimals - decimals), "0");
+      amountStr = amountStr.padEnd(
+        amountStr.length + (minDecimals - decimals),
+        "0"
+      );
     }
   } else {
     amountStr = amountStr + ".0000";
   }
   return amountStr;
-}
+};
 
 const parseValue = (value, tokenDecimals) => {
   const pValue = parseFloat(value);
@@ -156,7 +166,7 @@ const parseValue = (value, tokenDecimals) => {
   value = limitDecimals(value, tokenDecimals);
   const amount = ethers.utils.parseUnits(value, tokenDecimals);
   return bigNumberify(amount);
-}
+};
 
 function numberWithCommas(x) {
   if (!x) {
@@ -167,7 +177,13 @@ function numberWithCommas(x) {
   return parts.join(".");
 }
 
-const formatAmount = (amount, tokenDecimals, displayDecimals, useCommas, defaultValue) => {
+const formatAmount = (
+  amount,
+  tokenDecimals,
+  displayDecimals,
+  useCommas,
+  defaultValue
+) => {
   if (!defaultValue) {
     defaultValue = "...";
   }
@@ -204,5 +220,5 @@ module.exports = {
   getPriceBitArray,
   getPriceBits,
   formatAmount,
-  parseValue
-}
+  parseValue,
+};
