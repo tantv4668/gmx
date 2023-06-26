@@ -186,17 +186,16 @@ contract Vault is ReentrancyGuard, IVault {
         uint256 markPrice
     );
 
-    event DecreasePosition(
+    event ClosePosition(
         bytes32 key,
-        address account,
-        address collateralToken,
-        address indexToken,
-        uint256 collateralDelta,
-        uint256 sizeDelta,
-        bool isLong,
-        uint256 price,
-        uint256 fee
+        uint256 size,
+        uint256 collateral,
+        uint256 averagePrice,
+        uint256 entryFundingRate,
+        uint256 reserveAmount,
+        int256 realisedPnl
     );
+
     event LiquidatePosition(
         bytes32 key,
         address account,
@@ -210,14 +209,16 @@ contract Vault is ReentrancyGuard, IVault {
         uint256 markPrice
     );
 
-    event ClosePosition(
+    event DecreasePosition(
         bytes32 key,
-        uint256 size,
-        uint256 collateral,
-        uint256 averagePrice,
-        uint256 entryFundingRate,
-        uint256 reserveAmount,
-        int256 realisedPnl
+        address account,
+        address collateralToken,
+        address indexToken,
+        uint256 collateralDelta,
+        uint256 sizeDelta,
+        bool isLong,
+        uint256 price,
+        uint256 fee
     );
 
     event UpdateFundingRate(address token, uint256 fundingRate);
